@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <title>shinigami-777 System Monitor</title>
+    </head>
+    <body>
+        <script
+      src="https://unpkg.com/htmx.org@1.9.12"
+      integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/ws.js"></script>
+    
+    <h1>shinigami-777 System Monitor</h1>
+    <div hx-ext="ws" ws-connect="ws://localhost:6969/ws">
+        <div id="update-timestamp">Loading data... </div>
+        <div id="monitor-data">
+            <div id="system-data"></div>
+            <div id="disk-data"></div>
+            <div id="cpu-data"></div>
+        </div>
+    </div>
+    </body>
+</html>
