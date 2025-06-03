@@ -1,22 +1,152 @@
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>shinigami-777 System Monitor</title>
+        <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        <!--link rel="stylesheet" href="style.css"-->
+
     </head>
-    <body>
-        <script
-      src="https://unpkg.com/htmx.org@1.9.12"
-      integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
-      crossorigin="anonymous"
-    ></script>
+    <body class="relative min-h-screen">
+    
+    <!-- Background image-->
+    <div class="absolute inset-0 bg-[url('assets/minecraftnight.png')] bg-cover bg-center opacity-70 z-0"></div>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/ws.js"></script>
     
-    <h1>shinigami-777 System Monitor</h1>
-    <div hx-ext="ws" ws-connect="ws://localhost:6969/ws">
-        <div id="update-timestamp">Loading data... </div>
-        <div id="monitor-data">
-            <div id="system-data"></div>
-            <div id="disk-data"></div>
-            <div id="cpu-data"></div>
+    <div class="container mx-auto p-8" hx-ext="ws" ws-connect="ws://localhost:6969/ws">
+      <div class="mb-2 text-4xl font-bold  opacity-150">Shinigami-777 System Monitor</div>
+      <div class="flex flex-row items-center my-2">
+        <div class="mr-2 h-2 w-2 bg-green-400 rounded-full"></div>
+        <!-- Time stamp-->
+        <div id="update-timestamp">
+          Loading . . .
+        </div>
+      </div>
+      <!-- System info -->
+      <hr class="my-4 h-1 bg-gray-200 border-0 dark:bg-gray-500">
+      <div class="grid grid-cols-2 gap-10">
+        
+        <ul class="mt-4 divide-y divide-gray-400">
+          <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+              <span class="mx-2 p-1">Hostname</span>
+              <span class="mx-2 p-1" id="system-hostname"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+              <span class="mx-2 p-1">Operating System</span>
+              <span class="mx-2 p-1" id="system-os"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+              <span class="mx-2 p-1">Platform</span>
+              <span class="mx-2 p-1" id="system-platform"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+            <span class="mx-2 p-1">Version</span>
+            <span class="mx-2 p-1" id="system-version"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+            <span class="mx-2 p-1">Architecture</span>
+            <span class="mx-2 p-1" id="system-arch"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+              <span class="mx-2 p-1">Running Processess</span>
+              <span class="mx-2 p-1" id="system-running-processess"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+              <span class="mx-2 p-1">Total Memory</span>
+              <span class="mx-2 p-1" id="system-total-memory"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+              <span class="mx-2 p-1">Used Memory</span>
+              <span class="mx-2 p-1" id="system-used-memory"></span>
+          </li>
+          <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+              <span class="mx-2 p-1">Free Memory</span>
+              <span class="mx-2 p-1" id="system-free-memory"></span>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <div class="flex flex-row items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
+              </svg>                  
+            <span class="ml-2 text-lg font-medium">CPU</span>
+        </div>
+        <ul class="mt-4 divide-y divide-gray-400" id="cpu-data">
+            <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                <span class="mx-2 p-1">Manufacturer</span>
+                <span class="mx-2 p-1" id="cpu-manufacturer"></span>
+            </li>
+            <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                <span class="mx-2 p-1">Model</span>
+                <span class="mx-2 p-1" id="cpu-model"></span>
+            </li>
+            <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                <span class="mx-2 p-1">Family</span>
+                <span class="mx-2 p-1" id="cpu-family"></span>
+            </li>
+            <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                <span class="mx-2 p-1">Cores</span>
+                <span class="mx-2 p-1" id="cpu-cores"></span>
+            </li>
+        </ul>
+    </div>
+    <div>
+      <div class="flex flex-row items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.737 5.1a3.375 3.375 0 0 1 2.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 0 1 .9 2.7m0 0a3 3 0 0 1-3 3m0 3h.008v.008h-.008v-.008Zm0-6h.008v.008h-.008v-.008Zm-3 6h.008v.008h-.008v-.008Zm0-6h.008v.008h-.008v-.008Z" />
+            </svg>                                        
+          <span class="ml-2 text-lg font-medium">Disk</span>
+      </div>
+      <ul class="mt-4 divide-y divide-gray-400" id="disk-data">
+        <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+          <span class="mx-2 p-1">Partitions</span>
+          <span class="mx-2 p-1" id="disk-partitions"></span>
+        </li>
+        <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+          <span class="mx-2 p-1">Total Storage</span>
+          <span class="mx-2 p-1" id="disk-total-storage"></span>
+        </li>
+        <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+          <span class="mx-2 p-1">Used Storage</span>
+          <span class="mx-2 p-1" id="disk-usage"></span>
+        </li>
+        <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+          <span class="mx-2 p-1">Free Storage</span>
+          <span class="mx-2 p-1" id="disk-free"></span>
+        </li>
+      </ul>
+  </div>
+
+
+
+    </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard">
+            <div id="system-data" class="box">
+              <div class="title">System Info</div>
+              <div class="data">
+                <!-- put the info here -->
+              </div>
+            </div>
+        
+            <div id="cpu-data" class="box">
+              <div class="title">CPU Usage</div>
+              <div class="data">
+                <!-- put the info here -->
+              </div>
+            </div>
+        
+            <div id="disk-data" class="box">
+              <div class="title">Disk Usage</div>
+              <div class="data">
+                <!-- put the info here -->
+                </div>
+            </div>
         </div>
     </div>
     </body>
