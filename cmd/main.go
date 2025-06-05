@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"sync"
 	"time"
 
@@ -120,13 +121,17 @@ func main() {
 			fmt.Println("---------------------------------------------------")
 
 			timestamp := time.Now().Format("2006-01-02 15:01:05")
+			re := regexp.MustCompile(`[ \n\r]+`)
+			sys := re.Split(systemSection, -1)
+			print("hehe", sys[1])
 			msg := []byte(`
-      <div hx-swap-oob="innerHTML:#update-timestamp">
-        <p><i style="color: green" class="fa fa-circle"></i> ` + timestamp + `</p>
-      </div>
-      <div hx-swap-oob="innerHTML:#system-data">` + systemSection + `</div>
-      <div hx-swap-oob="innerHTML:#cpu-data">` + cpuSection + `</div>
-      <div hx-swap-oob="innerHTML:#disk-data">` + diskSection + `</div>`)
+			<div hx-swap-oob="innerHTML:#update-timestamp">
+				<p><i style="color: green" class="fa fa-circle"></i> ` + timestamp + `</p>
+			</div>
+			<div hx-swap-oob="innerHTML:#system-hostname">` + sys[1] + `</div>
+			<div hx-swap-oob="innerHTML:#system-os">` + sys[9] + `</div>
+			<div hx-swap-oob="innerHTML:#cpu-data">` + cpuSection + `</div>
+			<div hx-swap-oob="innerHTML:#disk-data">` + diskSection + `</div>`)
 			s.broadcast(msg)
 
 			//keep updating every 2 seconds
