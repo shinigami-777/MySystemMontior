@@ -13,10 +13,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/shinigami-777/MySystemMonitor/cmd/server"
-	"github.com/shinigami-777/MySystemMonitor/cmd/util"
+	"MySystemMontior/cmd/server"
+	"MySystemMontior/cmd/util"
 
-	"github.com/joho/godotenv"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/host"
@@ -58,6 +57,9 @@ func main() {
 					<span class="mx-2 p-1" id="cpu-cores">` + fmt.Sprintf("%d cores", cpu.Cores) + `</span>
 				</li>
 				`
+				break
+				// showing all cpus take two much space....and all of them are same (in my case)
+				// so i am showing the result for one
 			}
 
 			partitionStats, _ := disk.Partitions(true)
@@ -139,15 +141,16 @@ func main() {
 		}
 	}(s)
 
-	err := godotenv.Load()
-	if err != nil {
+	//err := godotenv.Load()
+	/*if err != nil {
 		log.Fatal(err)
-	}
+	}*/
 
-	port := os.Getenv("APP_PORT")
+	/*port := os.Getenv("APP_PORT")
 	if port == "" {
 		port = "8000"
-	}
+	}*/
+	port := "8000"
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
@@ -158,7 +161,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		if err = server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
 		}
 		log.Println("Stopped serving new connections")

@@ -27,7 +27,7 @@ func NewHttpServer() *HttpServer {
 		subscribers:             make(map[*subscriber]struct{}),
 	}
 
-	s.Mux.Handle("/", http.FileServer(http.Dir("./views")))
+	s.Mux.Handle("/", http.FileServer(http.Dir("./cmd/htmx/")))
 	s.Mux.HandleFunc("/ws", s.subscribeHandler)
 	return s
 }
