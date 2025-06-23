@@ -18,6 +18,6 @@ git clone https://github.com/shinigami-777/MySystemMontior.git
 cd MySystemMontior
 go run cmd/main.go
 ```
-Open http://localhost:8080 on your browser to view the real time system info.
+Open http://localhost:8000 on your browser to view the real time system info.
 
 ![veiw](cmd/htmx/assets/look.png)
