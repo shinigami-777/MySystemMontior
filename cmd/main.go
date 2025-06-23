@@ -1,148 +1,178 @@
 package main
 
 import (
-	"MySystemMontior/cmd/hardware"
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"regexp"
-	"sync"
+	"os/signal"
+	"sort"
+	"strconv"
+	"syscall"
 	"time"
 
-	"github.com/coder/websocket"
+	"github.com/shinigami-777/MySystemMonitor/cmd/server"
+	"github.com/shinigami-777/MySystemMonitor/cmd/util"
+
+	"github.com/joho/godotenv"
+	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/disk"
+	"github.com/shirou/gopsutil/v4/host"
+	"github.com/shirou/gopsutil/v4/mem"
+	"github.com/shirou/gopsutil/v4/process"
 )
 
-type server struct {
-	subscriberMessageBuffer int
-	mux                     http.ServeMux
-	subscribersMutex        sync.Mutex
-	subscribers             map[*subscriber]struct{}
-}
-
-type subscriber struct {
-	msgs chan []byte
-}
-
-func NewServer() *server {
-	s := &server{
-		subscriberMessageBuffer: 10,
-		subscribers:             make(map[*subscriber]struct{}),
-	}
-
-	s.mux.Handle("/", http.FileServer(http.Dir("./cmd/htmx")))
-	s.mux.HandleFunc("/ws", s.subscribeHandler)
-	return s
-}
-
-func (s *server) subscribeHandler(writer http.ResponseWriter, req *http.Request) {
-	err := s.subscribe(req.Context(), writer, req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-}
-
-func (s *server) subscribe(ctx context.Context, writer http.ResponseWriter, req *http.Request) error {
-	var c *websocket.Conn
-	subscriber := &subscriber{
-		msgs: make(chan []byte, s.subscriberMessageBuffer),
-	}
-	s.addSubscriber(subscriber)
-
-	c, err := websocket.Accept(writer, req, nil)
-	if err != nil {
-		return err
-	}
-	defer c.CloseNow()
-
-	ctx = c.CloseRead(ctx)
-	for {
-		select {
-		case msg := <-subscriber.msgs:
-			ctx, cancel := context.WithTimeout(ctx, time.Second*5)
-			defer cancel()
-			err := c.Write(ctx, websocket.MessageText, msg)
-			if err != nil {
-				return err
-			}
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-}
-
-func (s *server) addSubscriber(subscriber *subscriber) {
-	s.subscribersMutex.Lock()
-	s.subscribers[subscriber] = struct{}{}
-	s.subscribersMutex.Unlock()
-	fmt.Println("Added subscriber ", subscriber)
-}
-
-func (s *server) broadcast(msg []byte) {
-	s.subscribersMutex.Lock()
-	defer s.subscribersMutex.Unlock()
-
-	for s := range s.subscribers {
-		s.msgs <- msg
-	}
-}
-
 func main() {
-	fmt.Println("Starting the Golang System Monitor....")
-	srv := NewServer()
+	fmt.Println("Starting system monitor")
+	s := server.NewHttpServer()
 
-	go func(s *server) {
+	go func(s *server.HttpServer) {
 		for {
-			systemSection, err := hardware.GetSystemSection()
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Println(systemSection)
-				//s.broadcast([]byte(systemSection))
+			hostStat, _ := host.Info()
+			vmStat, _ := mem.VirtualMemory()
+
+			cpus, _ := cpu.Info()
+			var cpuInfo string
+			for _, cpu := range cpus {
+				cpuInfo += `
+				<li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+					<span class="mx-2 p-1">Manufacturer</span>
+					<span class="mx-2 p-1" id="cpu-manufacturer">` + cpu.VendorID + `</span>
+				</li>
+				<li class="flex justify-between gap-x-4 py-1 rounded-sm">
+					<span class="mx-2 p-1">Model</span>
+					<span class="mx-2 p-1" id="cpu-model">` + cpu.ModelName + `</span>
+				</li>
+				<li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+					<span class="mx-2 p-1">Family</span>
+					<span class="mx-2 p-1" id="cpu-family">` + cpu.Family + `</span>
+				</li>
+				<li class="flex justify-between gap-x-4 py-1 rounded-sm">
+					<span class="mx-2 p-1">Speed</span>
+					<span class="mx-2 p-1" id="cpu-speed">` + fmt.Sprintf("%.2f MHz", cpu.Mhz) + `</span>
+				</li>
+				<li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+					<span class="mx-2 p-1">Cores</span>
+					<span class="mx-2 p-1" id="cpu-cores">` + fmt.Sprintf("%d cores", cpu.Cores) + `</span>
+				</li>
+				`
 			}
 
-			diskSection, err := hardware.GetDiskSection()
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Println(diskSection)
-				//s.broadcast([]byte(diskSection))
+			partitionStats, _ := disk.Partitions(true)
+			partitions, totalStorage, usedStorage, freeStorage := "", "", "", ""
+
+			for _, partition := range partitionStats {
+				diskUsage, _ := disk.Usage(partition.Mountpoint)
+				if partitions == "" {
+					partitions = fmt.Sprintf("%s (%s)", partition.Mountpoint, partition.Fstype)
+				} else {
+					partitions += fmt.Sprintf(", %s (%s)", partition.Mountpoint, partition.Fstype)
+				}
+
+				if diskUsage != nil {
+					if totalStorage == "" {
+						totalStorage = fmt.Sprintf("%s %dGB", partition.Mountpoint, util.BytesToGigabyte(diskUsage.Total))
+					} else {
+						totalStorage += fmt.Sprintf(", %s %dGB", partition.Mountpoint, util.BytesToGigabyte(diskUsage.Total))
+					}
+
+					if usedStorage == "" {
+						usedStorage = fmt.Sprintf("%s %dGB (%.2f%%)", partition.Mountpoint, util.BytesToGigabyte(diskUsage.Used), diskUsage.UsedPercent)
+					} else {
+						usedStorage += fmt.Sprintf(", %s %dGB (%.2f%%)", partition.Mountpoint, util.BytesToGigabyte(diskUsage.Used), diskUsage.UsedPercent)
+					}
+
+					if freeStorage == "" {
+						freeStorage = fmt.Sprintf("%s %dGB", partition.Mountpoint, util.BytesToGigabyte(diskUsage.Free))
+					} else {
+						freeStorage += fmt.Sprintf(", %s %dGB", partition.Mountpoint, util.BytesToGigabyte(diskUsage.Free))
+					}
+				}
 			}
 
-			cpuSection, err := hardware.GetCPUSection()
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Println(cpuSection)
-				//s.broadcast([]byte(cpuSection))
+			processess, _ := process.Processes()
+			sort.Slice(processess, func(i, j int) bool {
+				p1, _ := processess[i].CPUPercent()
+				p2, _ := processess[j].CPUPercent()
+				return p1 > p2
+			})
+
+			processessRow := ""
+			for i := 0; i < 10; i++ {
+				n, _ := processess[i].Name()
+				cp, _ := processess[i].CPUPercent()
+				rowColor := ""
+				if i%2 == 0 {
+					rowColor = "bg-gray-500"
+				}
+				processessRow += fmt.Sprintf(`
+                <li class="flex justify-between gap-x-4 py-1 rounded-sm %s">
+                    <span class="mx-2 p-1">%s (PID %d)</span>
+                    <span class="mx-2 p-1">%.2f%% CPU</span>
+                </li>
+                `, rowColor, n, processess[i].Pid, cp)
 			}
 
-			fmt.Println("---------------------------------------------------")
-
-			timestamp := time.Now().Format("2006-01-02 15:01:05")
-			re := regexp.MustCompile(`[ \n\r]+`)
-			sys := re.Split(systemSection, -1)
-			print("hehe", sys[1])
-			msg := []byte(`
-			<div hx-swap-oob="innerHTML:#update-timestamp">
-				<p><i style="color: green" class="fa fa-circle"></i> ` + timestamp + `</p>
-			</div>
-			<div hx-swap-oob="innerHTML:#system-hostname">` + sys[1] + `</div>
-			<div hx-swap-oob="innerHTML:#system-os">` + sys[9] + `</div>
-			<div hx-swap-oob="innerHTML:#cpu-data">` + cpuSection + `</div>
-			<div hx-swap-oob="innerHTML:#disk-data">` + diskSection + `</div>`)
-			s.broadcast(msg)
-
-			//keep updating every 2 seconds
-			time.Sleep(3 * time.Second)
-
+			timestamp := time.Now().Format("2006-01-02 15:04:05")
+			html := `
+			<span hx-swap-oob="innerHTML:#data-timestamp">` + timestamp + `</span>
+			<span hx-swap-oob="innerHTML:#system-hostname">` + hostStat.Hostname + `</span>
+			<span hx-swap-oob="innerHTML:#system-os">` + hostStat.OS + `</span>
+			<span hx-swap-oob="innerHTML:#system-platform">` + fmt.Sprintf("%s (%s)", hostStat.Platform, hostStat.PlatformFamily) + `</span>
+			<span hx-swap-oob="innerHTML:#system-version">` + hostStat.PlatformVersion + `</span>
+			<span hx-swap-oob="innerHTML:#system-arch">` + fmt.Sprintf("%s (%s)", hostStat.KernelArch, hostStat.KernelVersion) + `</span>
+			<span hx-swap-oob="innerHTML:#system-running-processess">` + strconv.Itoa(int(hostStat.Procs)) + `</span>
+			<span hx-swap-oob="innerHTML:#system-total-memory">` + strconv.Itoa(int(util.BytesToGigabyte(vmStat.Total))) + `GB </span>
+			<span hx-swap-oob="innerHTML:#system-used-memory">` + strconv.Itoa(int(util.BytesToGigabyte(vmStat.Used))) + `GB (` + fmt.Sprintf("%.2f%%", vmStat.UsedPercent) + `)</span>
+			<span hx-swap-oob="innerHTML:#system-free-memory">` + strconv.Itoa(int(util.BytesToGigabyte(vmStat.Free))) + `GB </span>
+			<div hx-swap-oob="innerHTML:#cpu-data">` + cpuInfo + `</div>
+			<span hx-swap-oob="innerHTML:#disk-partitions">` + partitions + `</span>
+			<span hx-swap-oob="innerHTML:#disk-total-storage">` + totalStorage + `</span>
+			<span hx-swap-oob="innerHTML:#disk-usage">` + usedStorage + `</span>
+			<span hx-swap-oob="innerHTML:#disk-free">` + freeStorage + `</span>
+			<span hx-swap-oob="innerHTML:#processess">` + processessRow + `</span>
+			`
+			s.Broadcast([]byte(html))
+			time.Sleep(time.Second * 5)
 		}
-	}(srv)
+	}(s)
 
-	err := http.ListenAndServe(":6969", &srv.mux)
+	err := godotenv.Load()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
+
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8000"
+	}
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%s", port),
+		Handler: &s.Mux,
+	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		if err = server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
+		log.Println("Stopped serving new connections")
+	}()
+
+	<-stop
+	log.Println("Shutting down gracefully...")
+
+	shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownRelease()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Printf("server shutdown error: %v\n", err)
+	}
+
+	log.Println("Server stoppped")
 }

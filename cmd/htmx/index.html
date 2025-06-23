@@ -1,156 +1,134 @@
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>shinigami-777 System Monitor</title>
-        <script src="https://unpkg.com/htmx.org@1.9.5"></script>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <!--link rel="stylesheet" href="style.css"-->
-
-    </head>
-    <body class="relative min-h-screen">
-    
-    <!-- Background image-->
-    <div class="absolute inset-0 bg-[url('assets/minecraftnight.png')] bg-cover bg-center opacity-70 z-0"></div>
-    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/ws.js"></script>
-    
-    <div class="container mx-auto p-8" hx-ext="ws" ws-connect="ws://localhost:6969/ws">
-      <div class="mb-2 text-4xl font-bold  opacity-150">Shinigami-777 System Monitor</div>
-      <div class="flex flex-row items-center my-2">
-        <div class="mr-2 h-2 w-2 bg-green-400 rounded-full"></div>
-        <!-- Time stamp-->
-        <div id="update-timestamp">
-          Loading . . .
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GoSysMon - Go System Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-700 text-white">
+    <div class="container mx-auto p-8" hx-ext="ws" ws-connect="/ws">
+        <div class="mb-2 text-3xl font-bold">System Monitor</div>
+        <div class="flex flex-row items-center my-2">
+          <div class="mr-2 h-2 w-2 bg-green-400 rounded-full"></div>
+          <div id="data-timestamp"></div>
         </div>
-      </div>
-      
-      <div class="container mx-auto px-4">
         <hr class="my-4 h-1 bg-gray-200 border-0 dark:bg-gray-500">
-      
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      
-          <!-- System info -->
-          <div class="bg-gray-800 rounded-xl p-4 text-white shadow-lg">
-            <span class="ml-2 text-lg font-medium">SYSTEM</span>
-            <ul class="divide-y divide-gray-400">
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Hostname</span>
-                <span class="mx-2 p-1" id="system-hostname"><div id="system-hostname"></div></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Operating System</span>
-                <span class="mx-2 p-1" id="system-os"><div id="system-os"></div></span>
-              </li>
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Platform</span>
-                <span class="mx-2 p-1" id="system-platform"><div id="system-platform"></div></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Version</span>
-                <span class="mx-2 p-1" id="system-version"><div id="system-version"></div></span>
-              </li>
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Architecture</span>
-                <span class="mx-2 p-1" id="system-arch"></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Running Processes</span>
-                <span class="mx-2 p-1" id="system-running-processess"></span>
-              </li>
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Total Memory</span>
-                <span class="mx-2 p-1" id="system-total-memory"></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Used Memory</span>
-                <span class="mx-2 p-1" id="system-used-memory"></span>
-              </li>
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Free Memory</span>
-                <span class="mx-2 p-1" id="system-free-memory"></span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- CPU Info-->
-          <div class="bg-gray-800 rounded-xl p-4 text-white shadow-lg">
-            <span class="ml-2 text-lg font-medium">CPU</span>
-            <ul class="divide-y divide-gray-400">
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Manufacturer</span>
-                <span class="mx-2 p-1" id="cpu-manufacturer"></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Model</span>
-                <span class="mx-2 p-1" id="cpu-model"></span>
-              </li>
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Cores</span>
-                <span class="mx-2 p-1" id="cpu-cores"></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Family</span>
-                <span class="mx-2 p-1" id="cpu-family"></span>
-              </li>
-            </ul>
-      
-            <!--<div class="mt-6">
-              <div class="flex items-center mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                    d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
-                </svg>
-                <span class="text-lg font-semibold">CPU</span>
+        <div class="grid grid-cols-2 gap-10">
+            <div>
+                <div class="flex flex-row items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" class="size-10">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+                    </svg>
+                    <span class="ml-2 text-lg font-medium">System</span>
+                </div>
+                <ul class="mt-4 divide-y divide-gray-400">
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                        <span class="mx-2 p-1">Hostname</span>
+                        <span class="mx-2 p-1" id="system-hostname"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                        <span class="mx-2 p-1">Operating System</span>
+                        <span class="mx-2 p-1" id="system-os"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                        <span class="mx-2 p-1">Platform</span>
+                        <span class="mx-2 p-1" id="system-platform"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                      <span class="mx-2 p-1">Version</span>
+                      <span class="mx-2 p-1" id="system-version"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                      <span class="mx-2 p-1">Architecture</span>
+                      <span class="mx-2 p-1" id="system-arch"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                        <span class="mx-2 p-1">Running Processess</span>
+                        <span class="mx-2 p-1" id="system-running-processess"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                        <span class="mx-2 p-1">Total Memory</span>
+                        <span class="mx-2 p-1" id="system-total-memory"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                        <span class="mx-2 p-1">Used Memory</span>
+                        <span class="mx-2 p-1" id="system-used-memory"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                        <span class="mx-2 p-1">Free Memory</span>
+                        <span class="mx-2 p-1" id="system-free-memory"></span>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="flex flex-row items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
+                      </svg>                  
+                    <span class="ml-2 text-lg font-medium">CPU</span>
+                </div>
+                <ul class="mt-4 divide-y divide-gray-400" id="cpu-data">
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                        <span class="mx-2 p-1">Manufacturer</span>
+                        <span class="mx-2 p-1" id="cpu-manufacturer"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                        <span class="mx-2 p-1">Model</span>
+                        <span class="mx-2 p-1" id="cpu-model"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                        <span class="mx-2 p-1">Family</span>
+                        <span class="mx-2 p-1" id="cpu-family"></span>
+                    </li>
+                    <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                        <span class="mx-2 p-1">Cores</span>
+                        <span class="mx-2 p-1" id="cpu-cores"></span>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="flex flex-row items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 1 0 0 6h13.5a3 3 0 1 0 0-6m-16.5-3a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3m-19.5 0a4.5 4.5 0 0 1 .9-2.7L5.737 5.1a3.375 3.375 0 0 1 2.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 0 1 .9 2.7m0 0a3 3 0 0 1-3 3m0 3h.008v.008h-.008v-.008Zm0-6h.008v.008h-.008v-.008Zm-3 6h.008v.008h-.008v-.008Zm0-6h.008v.008h-.008v-.008Z" />
+                      </svg>                                        
+                    <span class="ml-2 text-lg font-medium">Disk</span>
+                </div>
+                <ul class="mt-4 divide-y divide-gray-400" id="disk-data">
+                  <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                    <span class="mx-2 p-1">Partitions</span>
+                    <span class="mx-2 p-1" id="disk-partitions"></span>
+                  </li>
+                  <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                    <span class="mx-2 p-1">Total Storage</span>
+                    <span class="mx-2 p-1" id="disk-total-storage"></span>
+                  </li>
+                  <li class="flex justify-between gap-x-4 py-1 bg-gray-500 rounded-sm">
+                    <span class="mx-2 p-1">Used Storage</span>
+                    <span class="mx-2 p-1" id="disk-usage"></span>
+                  </li>
+                  <li class="flex justify-between gap-x-4 py-1 rounded-sm">
+                    <span class="mx-2 p-1">Free Storage</span>
+                    <span class="mx-2 p-1" id="disk-free"></span>
+                  </li>
+                </ul>
+            </div>
+            <div>
+              <div class="flex flex-row items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.559.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>                                             
+                <span class="ml-2 text-lg font-medium">10 Most CPU Processes</span>
               </div>
-              <ul class="divide-y divide-gray-400" id="cpu-data">
-                <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                  <span class="mx-2 p-1">Manufacturer</span>
-                  <span class="mx-2 p-1" id="cpu-manufacturer"></span>
-                </li>
-                <li class="flex justify-between py-1">
-                  <span class="mx-2 p-1">Model</span>
-                  <span class="mx-2 p-1" id="cpu-model"></span>
-                </li>
-                <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                  <span class="mx-2 p-1">Family</span>
-                  <span class="mx-2 p-1" id="cpu-family"></span>
-                </li>
-                <li class="flex justify-between py-1">
-                  <span class="mx-2 p-1">Cores</span>
-                  <span class="mx-2 p-1" id="cpu-cores"></span>
-                </li>
+              <ul class="mt-4 divide-y divide-gray-400" id="processess">
+                
               </ul>
-            </div>-->
-          </div>
-
-          <!-- DISK info -->
-          <div class="bg-gray-800 rounded-xl p-4 text-white shadow-lg">
-            <span class="ml-2 text-lg font-medium">DISK</span>
-            <ul class="divide-y divide-gray-400">
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Partitions</span>
-                <span class="mx-2 p-1" id="disk-partitions"></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Total Storage</span>
-                <span class="mx-2 p-1" id="disk-total-storage"></span>
-              </li>
-              <li class="flex justify-between py-1 bg-gray-500 rounded-sm">
-                <span class="mx-2 p-1">Used Storage</span>
-                <span class="mx-2 p-1" id="disk-used-storage"></span>
-              </li>
-              <li class="flex justify-between py-1">
-                <span class="mx-2 p-1">Free Storage</span>
-                <span class="mx-2 p-1" id="disk-free-storage"></span>
-              </li>
-            </ul>
-          </div>
-          <!-- Repeat ends -->
+            </div>
         </div>
-      </div>
-
-
-    </body>
+    </div>
+    <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/htmx-ext-ws@2.0.1/ws.js"></script>
+  </body>
 </html>
