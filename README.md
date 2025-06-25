@@ -1,4 +1,4 @@
-# MySystemMontior
+# MySystemMonitor
 
 This is a lightweight system monitoring tool written in Go. It uses `gopsutil` to gather system metrics, and delivers real-time updates to a modern web UI built with HTMX and WebSockets.
 
